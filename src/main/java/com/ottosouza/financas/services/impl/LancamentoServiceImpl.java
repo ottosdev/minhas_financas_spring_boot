@@ -3,6 +3,7 @@ package com.ottosouza.financas.services.impl;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -28,6 +29,7 @@ public class LancamentoServiceImpl implements LancamentoService {
 	@Transactional
 	public Lancamento salvar(Lancamento lancamento) {
 		validar(lancamento);
+		lancamento.setStatus(StatusLancamento.PENDENTE);
 		return repo.save(lancamento);
 	}
 
@@ -89,6 +91,12 @@ public class LancamentoServiceImpl implements LancamentoService {
 			throw new RegraNegocioException("Informe um tipo de lancamento");
 		}
 		
+	}
+
+	@Override
+	public Optional<Lancamento> buscarPorId(Long id) {
+	
+		return repo.findById(id);
 	}
 
 }

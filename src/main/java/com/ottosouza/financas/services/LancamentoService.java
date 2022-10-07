@@ -1,6 +1,7 @@
 package com.ottosouza.financas.services;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.ottosouza.financas.model.entity.Lancamento;
 import com.ottosouza.financas.model.entity.StatusLancamento;
@@ -14,4 +15,6 @@ public interface LancamentoService {
 	List<Lancamento> buscar(Lancamento lancamanetoFiltro);
 	void atualizarStatus(Lancamento lancamento, StatusLancamento status);	
 	void validar(Lancamento lancamento);
+	
+	Optional<Lancamento> buscarPorId(Long id);
 }

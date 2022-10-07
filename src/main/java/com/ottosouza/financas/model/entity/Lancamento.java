@@ -28,6 +28,8 @@ import lombok.ToString;
 @Entity
 @Builder
 @Table(name = "lancamento", schema = "financas")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Lancamento {
 
 	@Id
