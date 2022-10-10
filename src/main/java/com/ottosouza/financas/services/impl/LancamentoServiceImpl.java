@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import com.ottosouza.financas.exception.RegraNegocioException;
 import com.ottosouza.financas.model.entity.Lancamento;
 import com.ottosouza.financas.model.entity.StatusLancamento;
+import com.ottosouza.financas.model.entity.TipoLancamento;
 import com.ottosouza.financas.repositories.LancamentoRepository;
 import com.ottosouza.financas.services.LancamentoService;
 
@@ -67,36 +68,53 @@ public class LancamentoServiceImpl implements LancamentoService {
 
 	@Override
 	public void validar(Lancamento lancamento) {
-		if(lancamento.getDescricao() == null || lancamento.getDescricao().trim().equals("")) {
+		if (lancamento.getDescricao() == null || lancamento.getDescricao().trim().equals("")) {
 			throw new RegraNegocioException("Informe uma descricao valida");
 		}
-		
-		if(lancamento.getMes() == null || lancamento.getMes() < 1 || lancamento.getMes() > 12) {
+
+		if (lancamento.getMes() == null || lancamento.getMes() < 1 || lancamento.getMes() > 12) {
 			throw new RegraNegocioException("Informe um Mes valido");
 		}
-		
-		if(lancamento.getAno() == null || lancamento.getAno().toString().length() != 4) {
+
+		if (lancamento.getAno() == null || lancamento.getAno().toString().length() != 4) {
 			throw new RegraNegocioException("Informe um Ano valido");
 		}
-		
-		if(lancamento.getUsuario() == null || lancamento.getUsuario().getId() == null) {
+
+		if (lancamento.getUsuario() == null || lancamento.getUsuario().getId() == null) {
 			throw new RegraNegocioException("Informe um usuario");
 		}
-		
-		if(lancamento.getValor() == null || lancamento.getValor().compareTo(BigDecimal.ZERO) < 1 ) {
+
+		if (lancamento.getValor() == null || lancamento.getValor().compareTo(BigDecimal.ZERO) < 1) {
 			throw new RegraNegocioException("Informe um valor valido");
 		}
-		
-		if(lancamento.getTipo() == null  ) {
+
+		if (lancamento.getTipo() == null) {
 			throw new RegraNegocioException("Informe um tipo de lancamento");
 		}
-		
+
 	}
 
 	@Override
 	public Optional<Lancamento> buscarPorId(Long id) {
-	
+
 		return repo.findById(id);
+	}
+
+	@Override
+	@Transactional
+	public BigDecimal obterSaldoPorUsuario(Long id) {
+		BigDecimal receitas = repo.obterSaldoPorTipoLancamentoEUsuario(id, TipoLancamento.RECEITA);
+		BigDecimal despesas = repo.obterSaldoPorTipoLancamentoEUsuario(id, TipoLancamento.DESPESA);
+
+		if (receitas == null) {
+			receitas = BigDecimal.ZERO;
+		}
+
+		if (despesas == null) {
+			despesas = BigDecimal.ZERO;
+		}
+
+		return receitas.subtract(despesas);
 	}
 
 }

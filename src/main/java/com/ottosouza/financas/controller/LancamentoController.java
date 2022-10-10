@@ -29,13 +29,12 @@ import com.ottosouza.financas.services.UsuarioService;
 @RequestMapping("/lancamento")
 public class LancamentoController {
 
-	
 	@Autowired
 	private LancamentoService service;
-	
+
 	@Autowired
 	private UsuarioService serviceUsuario;
-	
+
 	@PostMapping
 	public ResponseEntity salvar(@RequestBody LancamentoDTO dto) {
 		try {
@@ -46,24 +45,23 @@ public class LancamentoController {
 			return ResponseEntity.badRequest().body(e.getMessage());
 		}
 	}
-	
-	
+
 	@PutMapping("{id}")
 	public ResponseEntity atualizar(@PathVariable("id") Long id, @RequestBody LancamentoDTO dto) {
-	
-			return service.buscarPorId(id).map(item -> {
-				try {
-					Lancamento lancamento = converter(dto);
-					lancamento.setId(item.getId());
-					service.atualizar(lancamento);
-					return ResponseEntity.ok(lancamento);
-				} catch (RegraNegocioException e) {
-					return ResponseEntity.badRequest().body(e.getMessage());
-				}
-			
-			}).orElseGet( () ->  new ResponseEntity("Lancamento nao encontrado na base", HttpStatus.BAD_REQUEST));
+
+		return service.buscarPorId(id).map(item -> {
+			try {
+				Lancamento lancamento = converter(dto);
+				lancamento.setId(item.getId());
+				service.atualizar(lancamento);
+				return ResponseEntity.ok(lancamento);
+			} catch (RegraNegocioException e) {
+				return ResponseEntity.badRequest().body(e.getMessage());
+			}
+
+		}).orElseGet(() -> new ResponseEntity("Lancamento nao encontrado na base", HttpStatus.BAD_REQUEST));
 	}
-	
+
 	@DeleteMapping("{id}")
 	public ResponseEntity deletar(@PathVariable Long id) {
 		return service.buscarPorId(id).map(item -> {
@@ -73,57 +71,73 @@ public class LancamentoController {
 			} catch (RegraNegocioException e) {
 				return ResponseEntity.badRequest().body(e.getMessage());
 			}
-		
-		}).orElseGet( () ->  new ResponseEntity("Lancamento nao encontrado na base", HttpStatus.BAD_REQUEST));
+
+		}).orElseGet(() -> new ResponseEntity("Lancamento nao encontrado na base", HttpStatus.BAD_REQUEST));
 	}
+
 	@GetMapping
-	public ResponseEntity buscar(
-			@RequestParam(value = "descricao" , required = false) String descricao,
+	public ResponseEntity buscar(@RequestParam(value = "descricao", required = false) String descricao,
 			@RequestParam(value = "mes", required = false) Integer mes,
 			@RequestParam(value = "ano", required = false) Integer ano,
-			@RequestParam(value = "idUsuario" ,required = true) Long idUsuario
-			) {
+			@RequestParam(value = "idUsuario", required = true) Long idUsuario) {
 		Lancamento filtro = new Lancamento();
 		filtro.setDescricao(descricao);
 		filtro.setAno(ano);
 		filtro.setMes(mes);
-		
+
 		Optional<Usuario> u = serviceUsuario.obterUsuarioId(idUsuario);
-		
-		if(!u.isPresent()) {
+
+		if (!u.isPresent()) {
 			return ResponseEntity.badRequest().body("Usuario nao encontrado");
-		}else {
+		} else {
 			filtro.setUsuario(u.get());
-			
+
 		}
-		
+
 		List<Lancamento> lancamentos = service.buscar(filtro);
 		return ResponseEntity.ok(lancamentos);
 	}
-	
-	
+
+	@PutMapping("{id}/atualiza-status")
+	public ResponseEntity atualizarStatus(@PathVariable Long id, @RequestBody AtualizaStatusDTO dto) {
+		return service.buscarPorId(id).map(item -> {
+		 StatusLancamento statusSelecionado = StatusLancamento.valueOf(dto.getStatus());
+			if(statusSelecionado == null ) {
+				return ResponseEntity.badRequest().body("Nao foi possivel atualizar o status do lancamento");
+			}
+			try {
+				item.setStatus(statusSelecionado);
+				service.atualizar(item);
+				return ResponseEntity.ok(item);
+			} catch (RegraNegocioException e) {
+				return ResponseEntity.badRequest().body(e.getMessage());
+			}
+		
+		}).orElseGet(() -> new ResponseEntity("Lancameneto nao encontrdo na base de dados.", HttpStatus.BAD_REQUEST));
+	}
+
 	private Lancamento converter(LancamentoDTO dto) {
 		Lancamento lancamento = new Lancamento();
-		
+
 		lancamento.setId(dto.getId());
 		lancamento.setDescricao(dto.getDescricao());
 		lancamento.setAno(dto.getAno());
 		lancamento.setAno(dto.getAno());
 		lancamento.setMes(dto.getMes());
 		lancamento.setValor(dto.getValor());
-		
-		
-		Usuario u = serviceUsuario.obterUsuarioId(dto.getUsuario()).orElseThrow(() -> new RegraNegocioException("Usuario nao existe"));
+
+		Usuario u = serviceUsuario.obterUsuarioId(dto.getUsuario())
+				.orElseThrow(() -> new RegraNegocioException("Usuario nao existe"));
 		lancamento.setUsuario(u);
-		if(dto.getTipo() != null) {
+		if (dto.getTipo() != null) {
 			lancamento.setTipo(TipoLancamento.valueOf(dto.getTipo()));
 		}
-		
-		if(dto.getStatus() != null ) {
+
+		if (dto.getStatus() != null) {
 			lancamento.setStatus(StatusLancamento.valueOf(dto.getStatus()));
 		}
 
 		return lancamento;
 	}
-	
+
 }
